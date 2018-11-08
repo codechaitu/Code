@@ -1,0 +1,36 @@
+1) From the likes table, get user_id and item_id
+
+SELECT  user_id, item_id,created  FROM `sage-shard-740.anon_jp.likes` WHERE created BETWEEN '2018-10-01 00:00:00' AND '2018-10-02 23:59:59' GROUP BY user_id,item_id,created  LIMIT 500000
+
+2) From items table, 
+
+
+(SELECT user_id,JSON_EXTRACT_SCALAR(prop, '$.item_id') as item_id,event_id, ctime, stime FROM `sage-shard-740.pascal_event_log.event_log_201810*` where  user_id is not null AND _TABLE_SUFFIX BETWEEN '01' and '02'  GROUP BY user_id, item_id,ctime,stime,event_id LIMIT 500000)  
+
+3) For getting the counts of likes from each event
+
+select distinct(event_id), count(event_id) as countNumber from 
+
+(SELECT user_id, item_id, event_id, ctime, stime FROM `kouzoh-p-codechaitu.ModelBuilding.items`) as I JOIN
+
+(SELECT user_id, item_id, created FROM `kouzoh-p-codechaitu.ModelBuilding.likes` ) as L ON
+
+I.user_id = L.user_id and I.item_id = L.item_id  GROUP BY event_id ORDER BY countNumber DESC
+
+
+
+
+4) Getting number of likes or dislikes
+
+
+
+SELECT user_id, count(item_id) as lik from (
+
+select  distinct I.user_id, I.item_id, if( I.user_id = L.user_id and I.item_id = L.item_id  ,1,0) as liked from 
+
+(SELECT  distinct user_id, item_id, event_id, ctime, stime FROM `kouzoh-p-codechaitu.ModelBuilding.items`) as I LEFT JOIN
+
+(SELECT distinct user_id, item_id, created FROM `kouzoh-p-codechaitu.ModelBuilding.likes` ) as L ON
+
+I.user_id = L.user_id   and event_id = 'item_detail_display'  ) where liked = 0 group by user_id order by lik desc LIMIT 10000
+

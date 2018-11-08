@@ -1,0 +1,11 @@
+
+//Item description
+SELECT  id, name, price,  brand_name,  num_likes, num_comments FROM `sage-shard-740.anon_jp.items` where id in ((SELECT distinct  JSON_EXTRACT_SCALAR(prop,'$.item_id') as item_id   FROM `sage-shard-740.pascal_event_log.event_log_201810*` where event_id like 'buy_complete' and _TABLE_SUFFIX between '01' and '07' and user_id is not null))
+
+//user and purchase items
+
+(SELECT distinct user_id, JSON_EXTRACT_SCALAR(prop,'$.item_id') as item_id   FROM `sage-shard-740.pascal_event_log.event_log_201810*` where event_id like 'buy_complete' and _TABLE_SUFFIX between '01' and '07' and user_id is not null)
+
+//get the counts -in codechaitu project
+
+SELECT  user_id, count(item_id) as countVal FROM `kouzoh-p-codechaitu.ModelBuilding.users_items` group by user_id order by countVal desc
